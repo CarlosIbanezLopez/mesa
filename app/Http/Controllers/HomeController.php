@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Helpers\CounterHelper;
+use Inertia\Inertia;
 
 class HomeController extends Controller
 {
@@ -23,6 +25,11 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $count = CounterHelper::incrementCounter('home');
+
+        return Inertia::render('Home', [
+            'count' => $count,
+            'status' => session('status')
+        ]);
     }
 }

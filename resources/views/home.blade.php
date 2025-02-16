@@ -1,8 +1,8 @@
 @extends('layouts.plantillabase')
 
-@section('title','Home')
-@section('h-title','Blank Page')
-@section('card-title','Empty card')
+@section('title', 'Home')
+@section('h-title', 'Bienvenido')
+@section('card-title', 'QUALITY STORE')
 
 @section('content')
     @if (session('status'))
@@ -10,6 +10,9 @@
             {{ session('status') }}
         </div>
     @endif
-
-    {{ __('You are logged in!') }}
+    {{ __('Bienvenido, :name', ['name' => Auth::user()->name]) }}
+    <div class="mt-4">
+        <p>Esta página ha sido visitada <strong>{{ $count }}</strong> veces.</p>
+    </div>
+    
 @endsection

@@ -1,0 +1,59 @@
+/* Modo oscuro */
+body.dark-mode {
+    background-color: #121212;
+    color: #ffffff;
+
+    .sidebar {
+        background-color: #1e1e1e;
+    }
+
+    .navbar {
+        background-color: #1e1e1e;
+        color: #ffffff;
+
+        .nav-link {
+            color: #b3b3b3;
+        }
+    }
+
+    .card {
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }
+
+    .table {
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }
+
+    .form-control {
+        background-color: #333333;
+        color: #ffffff;
+        border: 1px solid #555555;
+    }
+
+    .form-label {
+        color: #b3b3b3;
+    }
+
+    .btn {
+        background-color: #555555;
+        color: #ffffff;
+        border-color: #444444;
+    }
+
+    a {
+        color: #b3b3b3;
+    }
+
+    .alert {
+        background-color: #2a2a2a;
+        color: #ffffff;
+        border-color: #444444;
+    }
+
+    .dropdown-menu {
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }
+}

@@ -1,23 +1,16 @@
 // Fonts
 @import url('https://fonts.bunny.net/css?family=Nunito');
 
-// Variables
-//@import 'variables';
-
 // Bootstrap
-//@import 'bootstrap/scss/bootstrap';
+@import "bootstrap/scss/bootstrap";
 
-//Fontawesome
-@import "@fortawesome/fontawesome-free/scss/fontawesome";
-@import "@fortawesome/fontawesome-free/scss/regular";
-@import "@fortawesome/fontawesome-free/scss/solid";
-@import "@fortawesome/fontawesome-free/scss/brands";
-@import "@fortawesome/fontawesome-free/scss/v4-shims";
+// Fontawesome
+@import "@fortawesome/fontawesome-free/css/all.css";
 
 // Variables
 @import "1-variables/app";
 
-// Bootstrap 
+// Bootstrap components
 @import "bootstrap/scss/functions";
 @import "bootstrap/scss/variables";
 @import "bootstrap/scss/maps";
@@ -79,3 +72,15 @@
 // 3rd party plugin styles
 @import "5-vendor/flatpickr";
 @import "5-vendor/simplebar";
+
+// Dark mode
+@import "resources/sass/_dark-mode.scss";
+
+// Inertia specific styles
+.sidebar-link {
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: none;
+    }
+}
