@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Helpers\CounterHelper;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TiendaController extends Controller
 {
@@ -14,12 +17,26 @@ class TiendaController extends Controller
      */
     public function index()
     {
-        $productos = \DB::table('productos')->get();
-        $promociones = \DB::table('promociones')->get();
+        $productos = DB::table('productos')
+            ->select('productos.*', 'promociones.descuento')
+            ->leftJoin('promociones', 'productos.id_promocion', '=', 'promociones.id')
+            ->get();
+
+        foreach ($productos as $producto) {
+            $producto->foto_url = $producto->foto ? asset('storage/' . $producto->foto) : null;
+            if ($producto->descuento) {
+                $producto->precio_descuento = $producto->precio - ($producto->precio * ($producto->descuento / 100));
+            } else {
+                $producto->precio_descuento = $producto->precio;
+            }
+        }
+
         $count = CounterHelper::incrementCounter('tienda');
 
-        return view('tienda.tienda_index', compact('productos', 'promociones', 'count'));
-
+        return Inertia::render('Tienda/Index', [
+            'productos' => $productos,
+            'count' => $count
+        ]);
     }
 
     /**
@@ -39,86 +56,90 @@ class TiendaController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {   
-        // dd($request->all());
-        $total = 0;
-        foreach ($request->productos as $producto) {
-            $total += $producto['subtotal'];
-        }
+    {
+        try {
+            $total = 0;
+            foreach ($request->productos as $producto) {
+                $total += $producto['subtotal'];
+            }
 
-        $ventaId = \DB::table('ventas')->insertGetId([
-            'id_users' => auth()->id(),
-            'fecha' => now(),
-            'total' => $total, // Total de la compra
-        ]);
-
-        // Insertar en tabla pagos
-        \DB::table('pagos')->insert([
-            'id_venta' => $ventaId,
-            'metodo' => 'QR',
-            'monto' => $total, // Total de la compra
-        ]);
-        // dd($request->all());
-        // Insertar los detalles de la venta
-        foreach ($request->productos as $producto) {
-            \DB::table('detalles')->insert([
-                'id_venta' => $ventaId,
-                'id_producto' => $producto['id'],
-                'cantidad' => $producto['cantidad'],
-                'subtotal' => $producto['subtotal'],
+            $ventaId = DB::table('ventas')->insertGetId([
+                'id_users' => auth()->id(),
+                'fecha' => now(),
+                'total' => $total,
             ]);
+
+            DB::table('pagos')->insert([
+                'id_venta' => $ventaId,
+                'metodo' => 'QR',
+                'monto' => $total,
+            ]);
+
+            foreach ($request->productos as $producto) {
+                DB::table('detalles')->insert([
+                    'id_venta' => $ventaId,
+                    'id_producto' => $producto['id'],
+                    'cantidad' => $producto['cantidad'],
+                    'subtotal' => $producto['subtotal'],
+                ]);
+
+                $idInventario = DB::table('productos')
+                    ->where('id', $producto['id'])
+                    ->value('id_inventario');
+
+                DB::table('inventarios')
+                    ->where('id', $idInventario)
+                    ->decrement('stock', $producto['cantidad']);
+            }
+
+            return redirect()->route('checkout', ['ventaId' => $ventaId]);
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Error al procesar la compra: ' . $e->getMessage()]);
         }
-
-
-        // Actualizar el stock de cada producto
-        foreach ($request->productos as $producto) {
-            $idInventario = \DB::table('productos')->where('id', $producto['id'])->value('id_inventario');
-            $stockActual = \DB::table('inventarios')->where('id', $idInventario)->value('stock');
-            $nuevoStock = $stockActual - $producto['cantidad'];
-
-            \DB::table('inventarios')->where('id', $idInventario)->update(['stock' => $nuevoStock]);
-        }
-        // Redirigir con un mensaje de éxito
-        return redirect()->route('checkout', ['ventaId' => $ventaId])->with('success', 'Compra realizada con exito');
-    }
-
-    
-    public function detallesVenta($id)
-    {
-        // Obtener la venta y sus detalles
-        $venta = \DB::table('ventas')->where('id', $id)->first();
-
-        // Obtener los productos relacionados con la venta desde la tabla 'detalles'
-        $detalles = \DB::table('detalles')
-            ->join('productos', 'detalles.id_producto', '=', 'productos.id')
-            ->where('detalles.id_venta', $id)
-            ->select('productos.nombre', 'detalles.cantidad', 'detalles.subtotal', 'productos.precio')
-            ->get();
-
-        // Pasar los detalles de la venta a la vista
-        return view('tienda.compra_detalle', compact('venta', 'detalles'));
-    }
-    
-    public function misCompras()
-    {
-        $ventas = \DB::table('ventas')->where('id_users', auth()->id())->get();
-        return view('tienda.compras_index', compact('ventas'));
     }
 
     public function checkout($ventaId)
     {
-        // Obtener la venta y sus detalles
-        $venta = \DB::table('ventas')->where('id', $ventaId)->first();
+        $venta = DB::table('ventas')->where('id', $ventaId)->first();
 
-        // Obtener los productos relacionados con la venta desde la tabla 'detalles'
-        $detalles = \DB::table('detalles')
+        $detalles = DB::table('detalles')
             ->join('productos', 'detalles.id_producto', '=', 'productos.id')
             ->where('detalles.id_venta', $ventaId)
             ->select('productos.nombre', 'detalles.cantidad', 'detalles.subtotal', 'productos.precio')
             ->get();
 
-        // Pasar los detalles de la venta a la vista
-        return view('tienda.checkout', compact('venta', 'detalles'));
+        return Inertia::render('Tienda/Checkout', [
+            'venta' => $venta,
+            'detalles' => $detalles
+        ]);
+    }
+
+    public function misCompras()
+    {
+        $ventas = DB::table('ventas')
+            ->where('id_users', auth()->id())
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        return Inertia::render('Tienda/MisCompras', [
+            'ventas' => $ventas
+        ]);
+    }
+
+    public function detallesVenta($id)
+    {
+        $venta = DB::table('ventas')->where('id', $id)->first();
+
+        $detalles = DB::table('detalles')
+            ->join('productos', 'detalles.id_producto', '=', 'productos.id')
+            ->where('detalles.id_venta', $id)
+            ->select('productos.nombre', 'detalles.cantidad', 'detalles.subtotal', 'productos.precio')
+            ->get();
+
+        return Inertia::render('Tienda/DetalleVenta', [
+            'venta' => $venta,
+            'detalles' => $detalles
+        ]);
     }
 
     /**

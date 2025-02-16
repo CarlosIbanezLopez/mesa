@@ -75,12 +75,20 @@ Route::middleware(['auth', 'check.role:1'])->group(function () {
 });
 
 // Tienda
-Route::get('/tienda', [App\Http\Controllers\TiendaController::class, 'index'])->name('tienda_home');
-Route::post('/tienda_crear', [App\Http\Controllers\TiendaController::class, 'store'])->name('tienda_store');
-Route::get('/checkout/{ventaId}', [App\Http\Controllers\TiendaController::class, 'checkout'])->name('checkout');
-Route::post('/qr', [App\Http\Controllers\QrController::class, 'qr'])->name('generar_qr');
-Route::get('/mis_compras', [App\Http\Controllers\TiendaController::class, 'misCompras'])->name('compras_home');
-Route::get('/detalles_venta/{id}', [App\Http\Controllers\TiendaController::class, 'detallesVenta'])->name('detalles_venta');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/tienda', [App\Http\Controllers\TiendaController::class, 'index'])
+        ->name('tienda_home');
+    Route::post('/tienda/comprar', [App\Http\Controllers\TiendaController::class, 'store'])
+        ->name('tienda_store');
+    Route::get('/tienda/checkout/{ventaId}', [App\Http\Controllers\TiendaController::class, 'checkout'])
+        ->name('checkout');
+    Route::get('/tienda/mis-compras', [App\Http\Controllers\TiendaController::class, 'misCompras'])
+        ->name('compras_home');
+    Route::get('/tienda/detalle-venta/{id}', [App\Http\Controllers\TiendaController::class, 'detallesVenta'])
+        ->name('detalles_venta');
+    Route::post('/tienda/generar-qr', [App\Http\Controllers\QrController::class, 'qr'])
+        ->name('generar_qr');
+});
 
 // Clientes
 Route::get('/clientes', [App\Http\Controllers\ClienteController::class, 'index'])->name('clientes_home')->middleware('check.role:1');

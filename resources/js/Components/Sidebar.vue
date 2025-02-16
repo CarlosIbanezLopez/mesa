@@ -13,12 +13,7 @@
                     </Link>
                 </li>
 
-                <li class="sidebar-item" :class="{ active: $page.url.startsWith('/inventario') }">
-                    <Link class="sidebar-link" :href="route('inventario_home')">
-                        <i class="align-middle" data-feather="box"></i>
-                        <span class="align-middle">Inventario</span>
-                    </Link>
-                </li>
+
 
                 <li class="sidebar-item" :class="{ active: route().current('tienda_home') }">
                     <Link class="sidebar-link" :href="route('tienda_home')">
