@@ -1,0 +1,48 @@
+// Bootstrap
+@import 'bootstrap/scss/bootstrap';
+
+// Font Awesome
+@import "@fortawesome/fontawesome-free/scss/fontawesome";
+@import "@fortawesome/fontawesome-free/scss/regular";
+@import "@fortawesome/fontawesome-free/scss/solid";
+@import "@fortawesome/fontawesome-free/scss/brands";
+
+// Custom Styles
+.login-page, .register-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f6f9;
+}
+
+.login-box, .register-box {
+    width: 400px;
+}
+
+.card-outline.card-primary {
+    border-top: 3px solid #007bff;
+}
+
+.card-outline.card-success {
+    border-top: 3px solid #28a745;
+}
+
+.login-box-msg, .register-box-msg {
+    margin: 0;
+    padding: 0 20px 20px;
+    text-align: center;
+}
+
+.input-group-text {
+    background-color: transparent;
+}
+
+.icheck-primary {
+    margin-top: 0.5rem;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}

@@ -4,15 +4,31 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\AuthController;
 
 require(base_path('routes/route-list/route-auth.php'));
 
-// Rutas de autenticación (mantén las que ya tienes)
-Auth::routes();
-
-// Ruta principal
+// Rutas públicas
 Route::get('/', function () {
-    return redirect()->route('home');
+    return redirect()->route('login');
+});
+
+// Rutas de autenticación
+Route::middleware('guest')->group(function () {
+    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [AuthController::class, 'login']);
+    Route::get('register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('register', [AuthController::class, 'register']);
+});
+
+// Rutas protegidas
+Route::middleware('auth')->group(function () {
+    Route::get('/tienda', function () {
+        return Inertia::render('Tienda/Index');
+    })->name('tienda');
+
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    // Otras rutas protegidas...
 });
 
 // Home

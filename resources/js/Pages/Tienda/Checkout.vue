@@ -9,7 +9,7 @@
                         </div>
                         <div class="card-body">
                             <div class="alert alert-success" role="alert">
-                                ¡Compra realizada con éxito!
+                                ¡Carrito listo para pagar!
                             </div>
 
                             <div class="mb-4">
