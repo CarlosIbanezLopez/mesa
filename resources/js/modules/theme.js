@@ -25,3 +25,9 @@ const theme = {
 
 // Add theme to the window object
 window.theme = theme;
+
+const toggleDarkMode = () => {
+    document.body.classList.toggle('dark-mode');
+};
+
+export { toggleDarkMode };

@@ -3,23 +3,25 @@ import { createApp, h } from 'vue';
 import { createInertiaApp, Link } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
+// Importar estilos primero
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import '../sass/app.scss';
+
 // AdminKit (required)
-import "./modules/bootstrap";
-import "./modules/sidebar";
-import "./modules/theme";
-import "./modules/feather";
+import './modules/bootstrap';
+import './modules/sidebar';
+import './modules/theme';
+import './modules/feather';
 
 // Charts
-import "./modules/chartjs";
+import './modules/chartjs';
 
 // Forms
-import "./modules/flatpickr";
+import './modules/flatpickr';
 
 // Maps
-import "./modules/vector-maps";
-
-// Fontawesome
-import "@fortawesome/fontawesome-free/js/all";
+import './modules/vector-maps';
 
 // Mantén el código existente para el modo oscuro y otras funcionalidades
 document.addEventListener('DOMContentLoaded', function() {
@@ -35,8 +37,6 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const app = createApp({ render: () => h(App, props) })
         app.use(plugin)
-
-        // Configurar Ziggy globalmente
         app.mixin({ methods: { route } })
         app.component('Link', Link)
 

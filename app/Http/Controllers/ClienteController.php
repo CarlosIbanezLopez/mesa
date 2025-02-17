@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Helpers\CounterHelper;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class ClienteController extends Controller
 {
@@ -14,10 +16,13 @@ class ClienteController extends Controller
      */
     public function index()
     {
-        $clientes = \DB::select("SELECT * FROM users WHERE usertype_id = 2");
+        $clientes = DB::select("SELECT * FROM users WHERE usertype_id = 2");
         $count = CounterHelper::incrementCounter('cliente');
-        // dd($clientes);
-        return view('clientes.cliente_index', compact('clientes', 'count'));
+
+        return Inertia::render('Clientes/Index', [
+            'clientes' => $clientes,
+            'count' => $count
+        ]);
     }
 
     /**
@@ -83,7 +88,12 @@ class ClienteController extends Controller
      */
     public function destroy($id)
     {
-        \DB::table('users')->where('id', $id)->delete();
-        return redirect()->route('clientes_home')->with('success', 'Cliente eliminado con exito');
+        try {
+            DB::table('users')->where('id', $id)->delete();
+            return redirect()->route('clientes_home')
+                ->with('success', 'Cliente eliminado con éxito');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Error al eliminar el cliente']);
+        }
     }
 }

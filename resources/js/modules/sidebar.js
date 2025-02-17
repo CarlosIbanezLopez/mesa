@@ -14,7 +14,7 @@ const initializeSimplebar = () => {
 
     /* Recalculate simplebar on sidebar dropdown toggle */
     const sidebarDropdowns = document.querySelectorAll(".js-sidebar [data-bs-parent]");
-    
+
     sidebarDropdowns.forEach(link => {
       link.addEventListener("shown.bs.collapse", () => {
         simplebarInstance.recalculate();
@@ -43,3 +43,12 @@ const initializeSidebarCollapse = () => {
 
 // Wait until page is loaded
 document.addEventListener("DOMContentLoaded", () => initialize());
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Sidebar toggle
+    document.querySelectorAll('.sidebar-toggle').forEach(function(element) {
+        element.addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+        });
+    });
+});

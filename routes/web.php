@@ -91,7 +91,15 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Clientes
-Route::get('/clientes', [App\Http\Controllers\ClienteController::class, 'index'])->name('clientes_home')->middleware('check.role:1');
-Route::delete('/clientes_eliminar/{id}', [App\Http\Controllers\ClienteController::class, 'destroy'])->name('eliminar_cliente')->middleware('check.role:1');
+Route::middleware(['auth', 'check.role:1'])->group(function () {
+    Route::get('/clientes', [App\Http\Controllers\ClienteController::class, 'index'])
+        ->name('clientes_home');
+    Route::delete('/clientes_eliminar/{id}', [App\Http\Controllers\ClienteController::class, 'destroy'])
+        ->name('eliminar_cliente');
+});
+
 // Reporte
-Route::get('/reporte', [App\Http\Controllers\ReporteController::class, 'index'])->name('reporte_home')->middleware('check.role:1');
+Route::middleware(['auth', 'check.role:1'])->group(function () {
+    Route::get('/reporte', [App\Http\Controllers\ReporteController::class, 'index'])
+        ->name('reporte_home');
+});

@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Helpers\CounterHelper;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redirect;
 
 class ProductoController extends Controller
 {
@@ -15,14 +19,14 @@ class ProductoController extends Controller
      */
     public function index()
     {
-        $productos = \DB::table('productos')
+        $productos = DB::table('productos')
             ->select('productos.*', 'inventarios.stock')
             ->join('inventarios', 'productos.id_inventario', '=', 'inventarios.id')
             ->get();
 
         foreach ($productos as $producto) {
             // Verificar si el archivo existe antes de asignar la URL
-            if ($producto->foto && \Storage::exists('public/' . $producto->foto)) {
+            if ($producto->foto && Storage::exists('public/' . $producto->foto)) {
                 $producto->foto_url = asset('storage/' . $producto->foto);
             } else {
                 $producto->foto_url = null;
@@ -44,8 +48,8 @@ class ProductoController extends Controller
      */
     public function create()
     {
-        $inventarios = \DB::table('inventarios')->get();
-        $promociones = \DB::table('promociones')->get();
+        $inventarios = DB::table('inventarios')->get();
+        $promociones = DB::table('promociones')->get();
 
         return Inertia::render('Productos/Create', [
             'inventarios' => $inventarios,
@@ -67,7 +71,7 @@ class ProductoController extends Controller
             $relativePath = str_replace('public/', '', $path);
         }
 
-        \DB::table('productos')->insert([
+        DB::table('productos')->insert([
             'nombre' => $request->nombre,
             'descripcion' => $request->descripcion,
             'id_inventario' => $request->inventario,
@@ -99,12 +103,12 @@ class ProductoController extends Controller
      */
     public function edit($id)
     {
-        $producto = \DB::table('productos')->where('id', $id)->first();
-        $inventarios = \DB::table('inventarios')->get();
-        $promociones = \DB::table('promociones')->get();
+        $producto = DB::table('productos')->where('id', $id)->first();
+        $inventarios = DB::table('inventarios')->get();
+        $promociones = DB::table('promociones')->get();
 
         // Verificar si el archivo existe antes de asignar la URL
-        if ($producto->foto && \Storage::exists('public/' . $producto->foto)) {
+        if ($producto->foto && Storage::exists('public/' . $producto->foto)) {
             $producto->foto_url = asset('storage/' . $producto->foto);
         } else {
             $producto->foto_url = null;
@@ -137,21 +141,21 @@ class ProductoController extends Controller
 
             if ($request->hasFile('foto')) {
                 // Obtener el producto actual para eliminar la foto anterior si existe
-                $producto = \DB::table('productos')->where('id', $id)->first();
+                $producto = DB::table('productos')->where('id', $id)->first();
                 if ($producto && $producto->foto) {
-                    \Storage::delete('public/' . $producto->foto);
+                    Storage::delete('public/' . $producto->foto);
                 }
 
                 $path = $request->file('foto')->store('public/images');
                 $data['foto'] = str_replace('public/', '', $path);
             }
 
-            \DB::table('productos')->where('id', $id)->update($data);
+            DB::table('productos')->where('id', $id)->update($data);
 
             return redirect()->route('producto_home')
                 ->with('success', 'Producto actualizado con éxito');
         } catch (\Exception $e) {
-            \Log::error('Error actualizando producto: ' . $e->getMessage());
+            Log::error('Error actualizando producto: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Error al actualizar el producto: ' . $e->getMessage()]);
         }
     }
@@ -164,7 +168,7 @@ class ProductoController extends Controller
      */
     public function destroy($id)
     {
-        \DB::table('productos')->where('id', $id)->delete();
+        DB::table('productos')->where('id', $id)->delete();
         return redirect()->route('producto_home')->with('success', 'Producto eliminado con exito');
     }
 }
