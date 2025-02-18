@@ -17,18 +17,34 @@ class TiendaController extends Controller
      */
     public function index()
     {
+        // Obtener productos con su stock e información de promociones
         $productos = DB::table('productos')
-            ->select('productos.*', 'promociones.descuento')
-            ->leftJoin('promociones', 'productos.id_promocion', '=', 'promociones.id')
+            ->select(
+                'productos.*',
+                'inventarios.stock',
+                'promociones.descuento'
+            )
+            ->join('inventarios', 'productos.id_inventario', '=', 'inventarios.id')
+            ->leftJoin('promociones', function ($join) {
+                $join->on('productos.id_promocion', '=', 'promociones.id')
+                    ->where('promociones.fecha_final', '>=', now());
+            })
             ->get();
 
+        // Procesar cada producto
         foreach ($productos as $producto) {
+            // Procesar la URL de la foto
             $producto->foto_url = $producto->foto ? asset('storage/' . $producto->foto) : null;
+
+            // Calcular precio con descuento si hay promoción vigente
             if ($producto->descuento) {
-                $producto->precio_descuento = $producto->precio - ($producto->precio * ($producto->descuento / 100));
+                $producto->precio_descuento = round($producto->precio - ($producto->precio * ($producto->descuento / 100)), 2);
             } else {
                 $producto->precio_descuento = $producto->precio;
             }
+
+            // Asegurar que el stock sea un número
+            $producto->stock = (int)$producto->stock;
         }
 
         $count = CounterHelper::incrementCounter('tienda');

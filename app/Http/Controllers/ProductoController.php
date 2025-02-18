@@ -48,7 +48,15 @@ class ProductoController extends Controller
      */
     public function create()
     {
-        $inventarios = DB::table('inventarios')->get();
+        // Obtener solo los inventarios que no están siendo utilizados
+        $inventarios = DB::table('inventarios')
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('productos')
+                    ->whereRaw('productos.id_inventario = inventarios.id');
+            })
+            ->get();
+
         $promociones = DB::table('promociones')->get();
 
         return Inertia::render('Productos/Create', [
@@ -104,7 +112,17 @@ class ProductoController extends Controller
     public function edit($id)
     {
         $producto = DB::table('productos')->where('id', $id)->first();
-        $inventarios = DB::table('inventarios')->get();
+
+        // Obtener el inventario actual del producto y los inventarios no utilizados
+        $inventarios = DB::table('inventarios')
+            ->where('id', $producto->id_inventario) // Incluir el inventario actual
+            ->orWhereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('productos')
+                    ->whereRaw('productos.id_inventario = inventarios.id');
+            })
+            ->get();
+
         $promociones = DB::table('promociones')->get();
 
         // Verificar si el archivo existe antes de asignar la URL
@@ -168,7 +186,19 @@ class ProductoController extends Controller
      */
     public function destroy($id)
     {
-        DB::table('productos')->where('id', $id)->delete();
-        return redirect()->route('producto_home')->with('success', 'Producto eliminado con exito');
+        try {
+            // Primero intentamos eliminar los detalles relacionados
+            DB::table('detalles')->where('id_producto', $id)->delete();
+
+            // Luego eliminamos el producto
+            DB::table('productos')->where('id', $id)->delete();
+
+            return redirect()->route('producto_home')
+                ->with('success', 'Producto eliminado con éxito');
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'error' => 'No se puede eliminar el producto porque está siendo utilizado en ventas.'
+            ]);
+        }
     }
 }

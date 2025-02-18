@@ -16,7 +16,12 @@ class InventarioController extends Controller
      */
     public function index()
     {
-        $inventarios = \DB::table('inventarios')->get();
+        // Obtener los inventarios con un campo que indique si está en uso
+        $inventarios = DB::table('inventarios')
+            ->select('inventarios.*')
+            ->selectRaw('(SELECT COUNT(*) FROM productos WHERE productos.id_inventario = inventarios.id) as en_uso')
+            ->get();
+
         $count = CounterHelper::incrementCounter('inventario');
 
         return Inertia::render('Inventario/Index', [
@@ -107,9 +112,26 @@ class InventarioController extends Controller
      */
     public function destroy($id)
     {
-        \DB::table('inventarios')->where('id', $id)->delete();
+        try {
+            // Verificar si el inventario está siendo usado
+            $enUso = DB::table('productos')
+                ->where('id_inventario', $id)
+                ->exists();
 
-        return redirect()->route('inventario_home')
-            ->with('success', 'Inventario eliminado con éxito');
+            if ($enUso) {
+                return back()->withErrors([
+                    'error' => 'No se puede eliminar el inventario porque está asociado a un producto.'
+                ]);
+            }
+
+            DB::table('inventarios')->where('id', $id)->delete();
+
+            return redirect()->route('inventario_home')
+                ->with('success', 'Inventario eliminado con éxito');
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'error' => 'Error al eliminar el inventario.'
+            ]);
+        }
     }
 }

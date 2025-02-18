@@ -5,6 +5,8 @@ use App\Http\Controllers\HomeController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\AuthController;
+use Illuminate\Support\Facades\Artisan;
+
 
 require(base_path('routes/route-list/route-auth.php'));
 
@@ -118,4 +120,11 @@ Route::middleware(['auth', 'check.role:1'])->group(function () {
 Route::middleware(['auth', 'check.role:1'])->group(function () {
     Route::get('/reporte', [App\Http\Controllers\ReporteController::class, 'index'])
         ->name('reporte_home');
+});
+
+
+
+Route::get('/fix-storage-link', function () {
+    Artisan::call('storage:link');
+    return "Enlace simbólico creado";
 });

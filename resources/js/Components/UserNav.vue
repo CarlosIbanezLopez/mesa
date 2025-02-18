@@ -43,7 +43,7 @@
                         <div class="dropdown-divider"></div>
                         <Link
                             class="dropdown-item text-danger"
-                            href="/logout"
+                            :href="route('logout')"
                             method="post"
                             as="button"
                             preserve-scroll
@@ -75,7 +75,7 @@ export default {
     },
     methods: {
         handleSearch() {
-            this.$inertia.visit(`/${this.selectedOption}`)
+            this.$inertia.visit(`/inf513/grupo16sa/proyecto2/public/${this.selectedOption}`)
         }
     },
     mounted() {

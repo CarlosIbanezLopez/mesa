@@ -39,5 +39,6 @@ export default defineConfig({
                 quietDeps: true
             }
         }
-    }
+    },
+    base: '/inf513/grupo16sa/proyecto2/public/build',
 });

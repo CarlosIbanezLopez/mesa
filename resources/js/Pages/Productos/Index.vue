@@ -1,6 +1,21 @@
 <template>
     <AppLayout title="Productos" card-title="Productos">
         <div class="container-fluid p-0">
+            <!-- Mensajes de éxito y error -->
+            <div v-if="$page.props.flash.success"
+                 class="alert alert-success alert-dismissible fade show"
+                 role="alert">
+                {{ $page.props.flash.success }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div v-if="$page.props.flash.error"
+                 class="alert alert-danger alert-dismissible fade show"
+                 role="alert">
+                {{ $page.props.flash.error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
             <div class="row">
                 <div class="col-12">
                     <Link :href="route('producto_create')" class="btn btn-success mb-3">
@@ -79,16 +94,22 @@ export default {
     },
     props: {
         productos: Array,
-        count: Number
+        count: Number,
+        errors: Object
     },
     methods: {
-        handleImageError(producto) {
-            producto.foto_url = null;
-        },
         eliminarProducto(id) {
             if (confirm('¿Estás seguro de eliminar este producto?')) {
-                this.$inertia.delete(route('producto_delete', id))
+                this.$inertia.delete(route('producto_delete', id), {
+                    preserveScroll: true,
+                    onError: (errors) => {
+                        console.error('Error al eliminar:', errors)
+                    }
+                })
             }
+        },
+        handleImageError(producto) {
+            producto.foto_url = null
         }
     }
 }

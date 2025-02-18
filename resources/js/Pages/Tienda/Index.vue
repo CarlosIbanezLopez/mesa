@@ -1,6 +1,12 @@
 <template>
     <AppLayout title="Tienda" card-title="QUALITY STORE">
         <div class="container-fluid p-0">
+            <!-- Mensajes de error -->
+            <div v-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" @click="error = null" aria-label="Close"></button>
+            </div>
+
             <div class="row">
                 <div v-for="producto in productos" :key="producto.id" class="col-md-4">
                     <div class="card mb-4">
@@ -18,18 +24,30 @@
                                 <p class="card-text">Descuento: {{ producto.descuento }}%</p>
                                 <p class="card-text">Precio con descuento: ${{ producto.precio_descuento }}</p>
                             </template>
+                            <p class="card-text">
+                                Stock disponible:
+                                <span :class="{'text-danger': producto.stock === 0, 'text-success': producto.stock > 0}">
+                                    {{ producto.stock === 0 ? 'AGOTADO' : producto.stock }}
+                                </span>
+                            </p>
                             <div class="d-flex align-items-center">
                                 <input type="number"
-                                       v-model="cantidades[producto.id]"
+                                       v-model.number="cantidades[producto.id]"
                                        class="form-control me-2"
                                        style="width: 100px"
                                        min="1"
-                                       max="100">
+                                       :max="producto.stock"
+                                       :disabled="producto.stock === 0"
+                                       @input="validarCantidad(producto)">
                                 <button class="btn btn-primary"
-                                        @click="agregarAlCarrito(producto)">
-                                    Añadir al carrito
+                                        @click="agregarAlCarrito(producto)"
+                                        :disabled="producto.stock === 0 || !cantidadValida(producto.id)">
+                                    {{ producto.stock === 0 ? 'Agotado' : 'Añadir al carrito' }}
                                 </button>
                             </div>
+                            <small v-if="!cantidadValida(producto.id)" class="text-danger">
+                                La cantidad debe ser entre 1 y {{ producto.stock }}
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -87,34 +105,63 @@ export default {
     setup() {
         const cantidades = ref({})
         const carrito = ref([])
+        const error = ref(null)
 
+        // Inicializar cantidades con 1
         return {
             cantidades,
-            carrito
+            carrito,
+            error
         }
+    },
+    created() {
+        // Inicializar las cantidades para cada producto
+        this.productos.forEach(producto => {
+            this.cantidades[producto.id] = 1
+        })
     },
     methods: {
         handleImageError(producto) {
             producto.foto_url = null
         },
+        validarCantidad(producto) {
+            const cantidad = this.cantidades[producto.id]
+            if (!cantidad || cantidad < 1) {
+                this.cantidades[producto.id] = 1
+            } else if (cantidad > producto.stock) {
+                this.cantidades[producto.id] = producto.stock
+            }
+        },
+        cantidadValida(productoId) {
+            const cantidad = this.cantidades[productoId]
+            const producto = this.productos.find(p => p.id === productoId)
+            return cantidad && cantidad > 0 && cantidad <= producto.stock
+        },
         agregarAlCarrito(producto) {
-            const cantidad = this.cantidades[producto.id] || 1
-            const precio = producto.precio_descuento || producto.precio
-            const subtotal = cantidad * precio
+            const cantidad = parseInt(this.cantidades[producto.id])
 
+            if (!this.cantidadValida(producto.id)) {
+                this.error = `Por favor ingrese una cantidad válida para ${producto.nombre}`
+                return
+            }
+
+            // Verificar si ya existe en el carrito
             const itemExistente = this.carrito.find(item => item.id === producto.id)
             if (itemExistente) {
                 itemExistente.cantidad = cantidad
-                itemExistente.subtotal = subtotal
+                itemExistente.subtotal = cantidad * (producto.precio_descuento || producto.precio)
             } else {
+                const precio = producto.precio_descuento || producto.precio
                 this.carrito.push({
                     id: producto.id,
                     nombre: producto.nombre,
                     cantidad: cantidad,
                     precio: precio,
-                    subtotal: subtotal
+                    subtotal: cantidad * precio
                 })
             }
+
+            this.error = null
         },
         eliminarDelCarrito(item) {
             const index = this.carrito.indexOf(item)
@@ -123,6 +170,15 @@ export default {
             }
         },
         procesarCompra() {
+            // Validar stock antes de procesar
+            for (const item of this.carrito) {
+                const producto = this.productos.find(p => p.id === item.id)
+                if (item.cantidad > producto.stock) {
+                    this.error = `No hay suficiente stock de ${item.nombre}`
+                    return
+                }
+            }
+
             this.$inertia.post(route('tienda_store'), {
                 productos: this.carrito
             })
@@ -130,3 +186,18 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.card-img-top {
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+.text-success {
+    color: #28a745;
+}
+</style>
