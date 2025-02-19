@@ -73,6 +73,7 @@ class QrController extends Controller
             ]);
 
             $laResult = json_decode($loResponse->getBody()->getContents());
+            dd($loResponse, $laResult);
             $laValues = explode(";", $laResult->values)[1];
             $laQrImage = json_decode($laValues)->qrImage;
 

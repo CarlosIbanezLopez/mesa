@@ -40,5 +40,5 @@ export default defineConfig({
             }
         }
     },
-    base: '/inf513/grupo16sa/proyecto2/public/build',
+    //base: '/inf513/grupo16sa/proyecto2z/public/build',
 });

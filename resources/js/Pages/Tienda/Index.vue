@@ -37,17 +37,17 @@
                                        style="width: 100px"
                                        min="1"
                                        :max="producto.stock"
+                                       :placeholder="1"
                                        :disabled="producto.stock === 0"
                                        @input="validarCantidad(producto)">
                                 <button class="btn btn-primary"
                                         @click="agregarAlCarrito(producto)"
-                                        :disabled="producto.stock === 0 || !cantidadValida(producto.id)">
+                                        :disabled="producto.stock === 0 ||
+                                                  (cantidades[producto.id] && !cantidadValida(producto.id))">
                                     {{ producto.stock === 0 ? 'Agotado' : 'Añadir al carrito' }}
                                 </button>
                             </div>
-                            <small v-if="!cantidadValida(producto.id)" class="text-danger">
-                                La cantidad debe ser entre 1 y {{ producto.stock }}
-                            </small>
+
                         </div>
                     </div>
                 </div>
@@ -107,7 +107,6 @@ export default {
         const carrito = ref([])
         const error = ref(null)
 
-        // Inicializar cantidades con 1
         return {
             cantidades,
             carrito,
@@ -126,22 +125,22 @@ export default {
         },
         validarCantidad(producto) {
             const cantidad = this.cantidades[producto.id]
-            if (!cantidad || cantidad < 1) {
-                this.cantidades[producto.id] = 1
-            } else if (cantidad > producto.stock) {
+            if (cantidad && cantidad > producto.stock) {
                 this.cantidades[producto.id] = producto.stock
             }
         },
         cantidadValida(productoId) {
             const cantidad = this.cantidades[productoId]
             const producto = this.productos.find(p => p.id === productoId)
-            return cantidad && cantidad > 0 && cantidad <= producto.stock
+            // Permitir que la cantidad sea undefined o vacía
+            return !cantidad || (cantidad > 0 && cantidad <= producto.stock)
         },
         agregarAlCarrito(producto) {
-            const cantidad = parseInt(this.cantidades[producto.id])
+            // Si no hay cantidad especificada, usar 1
+            const cantidad = parseInt(this.cantidades[producto.id]) || 1
 
-            if (!this.cantidadValida(producto.id)) {
-                this.error = `Por favor ingrese una cantidad válida para ${producto.nombre}`
+            if (cantidad > producto.stock) {
+                this.error = `Solo hay ${producto.stock} unidades disponibles de ${producto.nombre}`
                 return
             }
 
@@ -161,6 +160,8 @@ export default {
                 })
             }
 
+            // Limpiar el input después de agregar al carrito
+            this.cantidades[producto.id] = ''
             this.error = null
         },
         eliminarDelCarrito(item) {
